@@ -1,22 +1,24 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 
-export default function Home() {
+//distructured to see the output 
+export default function Home({ launches }) {
+  console.log('launches', launches);
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>SpaceX projects</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          SpaceX Lunches
         </h1>
 
         <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
+          Latest Lunches from SpaceX
         </p>
 
         <div className={styles.grid}>
@@ -62,4 +64,57 @@ export default function Home() {
       </footer>
     </div>
   )
+}
+
+export async function getStaticProps() {
+  const client = new ApolloClient({
+    uri: 'https://api.spacex.land/graphql/',
+    cache: new InMemoryCache()
+  })
+
+  const { data } = await client.query({
+    query: gql`
+    {
+      launchesPast(limit: 10) {
+        mission_name
+        launch_date_local
+        launch_site {
+          site_name_long
+        }
+        links {
+          article_link
+          video_link
+        }
+        rocket {
+          rocket_name
+          first_stage {
+            cores {
+              flight
+            }
+          }
+          second_stage {
+            payloads {
+              payload_type
+              manufacturer
+            }
+          }
+        }
+        ships {
+          name
+          home_port
+          image
+        }
+      }
+    } `
+  })
+
+  console.log('data', data);
+
+
+  return {
+    props: {
+      launches: []
+    }
+  }
+
 }
